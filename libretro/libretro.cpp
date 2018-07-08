@@ -44,7 +44,7 @@
 #define PATH_MAX_LENGTH 4096
 #endif
 
-#define CORE_VERSION "0.74"
+#define CORE_VERSION "0.74-SVN"
 
 
 int cycles_0 = 0;
@@ -432,8 +432,8 @@ unsigned retro_api_version(void)
 void retro_get_system_info(struct retro_system_info *info)
 {
    info->library_name = "DOSBox";
-#ifdef GIT_VERSION
-   info->library_version = CORE_VERSION GIT_VERSION;
+#if defined(GIT_VERSION) && defined(SVN_VERSION)
+   info->library_version = CORE_VERSION SVN_VERSION GIT_VERSION;
 #else
    info->library_version = CORE_VERSION;
 #endif

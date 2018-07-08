@@ -1,5 +1,6 @@
 DEBUG=0
 GIT_VERSION := " $(shell git rev-parse --short HEAD)"
+SVN_VERSION := " $(shell git svn log --limit 1 | grep "|" | cut --fields=1 --delimiter=" ")"
 
 UNAME=$(shell uname -a)
 
@@ -202,7 +203,7 @@ endif
 ifeq ($(DEBUG), 1)
 COMMONFLAGS += -O0 -g
 else
-COMMONFLAGS += -O3 -DNDEBUG -DGIT_VERSION=\"$(GIT_VERSION)\"
+COMMONFLAGS += -O3 -DNDEBUG -DGIT_VERSION=\"$(GIT_VERSION)\" -DSVN_VERSION=\"$(SVN_VERSION)\"
 endif
 
 CORE_DIR    := .
