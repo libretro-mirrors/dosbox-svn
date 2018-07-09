@@ -24,7 +24,7 @@ LIBRETRO_DIR := libretro
 
 WITH_DYNAREC :=
 DYNAFLAGS :=
-TARGET_NAME := dosbox
+TARGET_NAME := dosbox_svn
 
 # system platform
 system_platform = unix
