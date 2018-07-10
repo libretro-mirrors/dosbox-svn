@@ -112,6 +112,8 @@ extern void* RDOSGFXhaveFrame;
 
 unsigned currentWidth, currentHeight;
 
+bool is_restarting = false;
+
 void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
 void retro_set_audio_sample(retro_audio_sample_t cb) { }
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_cb = cb; }
@@ -128,6 +130,7 @@ bool change_dosbox_var(std::string section_string, std::string var_string, std::
     Section_prop* secprop=(Section_prop *)section;
     if (secprop)
     {
+        section->ExecuteDestroy(false);
         std::string inputline = var_string + "=" + val_string;
         ret = section->HandleInputline(inputline.c_str());
         section->ExecuteInit(false);
@@ -335,13 +338,6 @@ void check_variables()
     MAPPER_Init();
 }
 
-void restart_program(std::vector<std::string> & parameters)
-{
-    /* TO-DO: Need to hookup a command similar to change_dosbox_vars */
-    if (log_cb)
-        log_cb(RETRO_LOG_WARN, "Program restart not supported\n");
-}
-
 static void retro_leave_thread(Bitu)
 {
     MIXER_CallBack(0, audioData, samplesPerFrame * 4);
@@ -357,8 +353,7 @@ static void retro_start_emulator(void)
     const char* const argv[2] = {"dosbox", loadPath.c_str()};
     CommandLine com_line(loadPath.empty() ? 1 : 2, argv);
     Config myconf(&com_line);
-    control=&myconf;
-
+    control = &myconf;
     check_variables();
 
     /* Init the configuration system and add default values */
@@ -368,7 +363,8 @@ static void retro_start_emulator(void)
     if(!configPath.empty())
         control->ParseConfigFile(configPath.c_str());
 
-    control->Init();
+    if (!is_restarting)
+        control->Init();
     check_variables();
 
     /* Init done, go back to the main thread */
@@ -394,7 +390,7 @@ static void retro_start_emulator(void)
     DOSBOXwantsExit = true;
 }
 
-static void retro_wrap_emulator(void)
+static void retro_wrap_emulator()
 {
     retro_start_emulator();
 
@@ -438,6 +434,24 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
     info->timing.sample_rate = (double)MIXER_RETRO_GetFrequency();
 }
 
+void retro_init_threads(void)
+{
+    if(!emuThread && !mainThread)
+    {
+        mainThread = co_active();
+#ifdef __GENODE__
+        emuThread = co_create((1<<18)*sizeof(void*), retro_wrap_emulator);
+#else
+        emuThread = co_create(65536*sizeof(void*)*16, retro_wrap_emulator);
+#endif
+    }
+    else
+    {
+        if (log_cb)
+            log_cb(RETRO_LOG_WARN, "Init called more than once \n");
+    }
+}
+
 void retro_init (void)
 {
     /* Initialize logger interface */
@@ -463,20 +477,7 @@ void retro_init (void)
     RDOSGFXcolorMode = RETRO_PIXEL_FORMAT_XRGB8888;
     environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &RDOSGFXcolorMode);
 
-    if(!emuThread && !mainThread)
-    {
-        mainThread = co_active();
-#ifdef __GENODE__
-        emuThread = co_create((1<<18)*sizeof(void*), retro_wrap_emulator);
-#else
-        emuThread = co_create(65536*sizeof(void*)*16, retro_wrap_emulator);
-#endif
-    }
-    else
-    {
-        if (log_cb)
-            log_cb(RETRO_LOG_WARN, "Init called more than once \n");
-    }
+    retro_init_threads();
 }
 
 void retro_deinit(void)
@@ -602,10 +603,41 @@ void retro_run (void)
         retro_midi_interface->flush();
 }
 
+void restart_program(std::vector<std::string> & parameters)
+{
+
+    if (log_cb)
+        log_cb(RETRO_LOG_WARN, "Program restart not supported\n");
+
+    return;
+
+    /* TO-DO: this kinda works but it's still not working 100% hence the early return*/
+    if(emuThread)
+    {
+        /* If the frontend wants to exit we need to let the emulator
+           run to finish its job. */
+        if(FRONTENDwantsExit)
+            co_switch(emuThread);
+
+        co_delete(emuThread);
+        emuThread = NULL;
+    }
+
+    co_delete(mainThread);
+    mainThread = NULL;
+
+    is_restarting = true;
+    retro_init_threads();
+}
+
+void retro_reset (void)
+{
+    restart_program(control->startup_params);
+}
+
 /* Stubs */
 void *retro_get_memory_data(unsigned type) { return 0; }
 size_t retro_get_memory_size(unsigned type) { return 0; }
-void retro_reset (void) { }
 size_t retro_serialize_size (void) { return 0; }
 bool retro_serialize(void *data, size_t size) { return false; }
 bool retro_unserialize(const void * data, size_t size) { return false; }
