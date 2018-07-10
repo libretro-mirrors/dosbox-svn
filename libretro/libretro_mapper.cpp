@@ -263,8 +263,8 @@ void MAPPER_Init()
 
     if (emulated_mouse)
     {
-       inputList.push_back(new EmulatedMouseButton(0, RDID(JOYPAD_R2), 0));
-       inputList.push_back(new EmulatedMouseButton(0, RDID(JOYPAD_L2), 1));
+        inputList.push_back(new EmulatedMouseButton(0, RDID(JOYPAD_R2), 0));
+        inputList.push_back(new EmulatedMouseButton(0, RDID(JOYPAD_L2), 1));
     }
 
     struct retro_input_descriptor desc[64];
@@ -361,170 +361,170 @@ void MAPPER_Init()
 
     if (connected[0] && connected[1])
     {
-      joytype=JOY_2AXIS;
-      JOYSTICK_Enable(0, true);
-      JOYSTICK_Enable(1, true);
+        joytype=JOY_2AXIS;
+        JOYSTICK_Enable(0, true);
+        JOYSTICK_Enable(1, true);
 
-      log_cb(RETRO_LOG_INFO, "Port 0 connected\n");
-      /* buttons*/
-      inputList.push_back(new JoystickButton(0, RDID(JOYPAD_Y), 0, 0));
-      inputList.push_back(new JoystickButton(0, RDID(JOYPAD_B), 0, 1));
-      if (gamepad[0])
-      {
-         log_cb(RETRO_LOG_INFO, "Port 0 gamepad\n");
-         /* dpad */
-         inputList.push_back(new JoystickHat(0, RDID(JOYPAD_LEFT), 0, 0));
-         inputList.push_back(new JoystickHat(0, RDID(JOYPAD_RIGHT), 0, 1));
-         inputList.push_back(new JoystickHat(0, RDID(JOYPAD_UP), 1, 0));
-         inputList.push_back(new JoystickHat(0, RDID(JOYPAD_DOWN), 1, 1));
-         for (i=0;  desc_gamepad_2button_p1[i].port == 0; i++)
-         {
-           desc[i] = desc_gamepad_2button_p1[i];
-           log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
-         }
-      }
-      else
-      {
-         log_cb(RETRO_LOG_INFO, "Port 0 joystick\n");
-         /* analogs */
-         inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_LEFT), RDID(ANALOG_X), 0, 0));
-         inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_LEFT), RDID(ANALOG_Y), 0, 1));
-         for (i=0;  desc_joystick_2button_p1[i].port == 0; i++)
-         {
-           desc[i] = desc_joystick_2button_p1[i];
-           log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
-         }
-      }
-
-      log_cb(RETRO_LOG_INFO, "Port 1 connected\n");
-      /* buttons*/
-      inputList.push_back(new JoystickButton(1, RDID(JOYPAD_Y), 0, 0));
-      inputList.push_back(new JoystickButton(1, RDID(JOYPAD_B), 0, 1));
-      if (gamepad[1])
-      {
-         log_cb(RETRO_LOG_INFO, "Port 1 gamepad\n");
-         /* dpad */
-         inputList.push_back(new JoystickHat(1, RDID(JOYPAD_LEFT), 0, 0));
-         inputList.push_back(new JoystickHat(1, RDID(JOYPAD_RIGHT), 0, 0));
-         inputList.push_back(new JoystickHat(1, RDID(JOYPAD_UP), 0, 1));
-         inputList.push_back(new JoystickHat(1, RDID(JOYPAD_DOWN), 0, 1));
-         for ( ;  desc_gamepad_2button_p2[j].port == 1; i++)
-         {
-           desc[i] = desc_gamepad_2button_p2[j];
-           j++;
-           log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
-         }
-         log_cb(RETRO_LOG_INFO, "Map: %d\n", desc[i++].port);
-      }
-      else
-      {
-         log_cb(RETRO_LOG_INFO, "Port 1 joystick\n");
-         /* analogs */
-         inputList.push_back(new JoystickAxis(1, RDIX(ANALOG_LEFT), RDID(ANALOG_X), 0, 0));
-         inputList.push_back(new JoystickAxis(1, RDIX(ANALOG_LEFT), RDID(ANALOG_Y), 0, 1));
-         for ( ;  desc_joystick_2button_p2[j].port == 1; i++)
-         {
-           desc[i] = desc_joystick_2button_p2[j];
-           j++;
-           log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
-         }
-      }
-    }
-    else if (connected[0] || connected[1])
-    {
-      if (connected[0])
-      {
-         log_cb(RETRO_LOG_INFO, "Port 0 connected\n");
-         joytype=JOY_4AXIS;
-         /* gravis gamepad was a hack basically needs both joytsticks to be enabled to function */
-         JOYSTICK_Enable(0, true);
-         JOYSTICK_Enable(1, true);
-
-         /* buttons*/
-         inputList.push_back(new JoystickButton(0, RDID(JOYPAD_Y), 0, 0));
-         inputList.push_back(new JoystickButton(0, RDID(JOYPAD_X), 0, 1));
-         inputList.push_back(new JoystickButton(0, RDID(JOYPAD_B), 1, 0));
-         inputList.push_back(new JoystickButton(0, RDID(JOYPAD_A), 1, 1));
-
-         if (gamepad[0])
-         {
+        log_cb(RETRO_LOG_INFO, "Port 0 connected\n");
+        /* buttons*/
+        inputList.push_back(new JoystickButton(0, RDID(JOYPAD_Y), 0, 0));
+        inputList.push_back(new JoystickButton(0, RDID(JOYPAD_B), 0, 1));
+        if (gamepad[0])
+        {
             log_cb(RETRO_LOG_INFO, "Port 0 gamepad\n");
             /* dpad */
             inputList.push_back(new JoystickHat(0, RDID(JOYPAD_LEFT), 0, 0));
-            inputList.push_back(new JoystickHat(0, RDID(JOYPAD_RIGHT), 0, 0));
-            inputList.push_back(new JoystickHat(0, RDID(JOYPAD_UP), 0, 1));
-            inputList.push_back(new JoystickHat(0, RDID(JOYPAD_DOWN), 0, 1));
-            for (i=0;  desc_gamepad_4button[i].port == 0; i++)
+            inputList.push_back(new JoystickHat(0, RDID(JOYPAD_RIGHT), 0, 1));
+            inputList.push_back(new JoystickHat(0, RDID(JOYPAD_UP), 1, 0));
+            inputList.push_back(new JoystickHat(0, RDID(JOYPAD_DOWN), 1, 1));
+            for (i=0;  desc_gamepad_2button_p1[i].port == 0; i++)
             {
-              desc[i] = desc_gamepad_4button[i];
-              log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
+                desc[i] = desc_gamepad_2button_p1[i];
+                log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
             }
-         }
-         else
-         {
-            log_cb(RETRO_LOG_INFO, "Port 0 joystick\n");
-            /* analogs */
-            inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_LEFT), RDID(ANALOG_X), 0, 0));
-            inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_LEFT), RDID(ANALOG_Y), 0, 1));
-            inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_RIGHT), RDID(ANALOG_X), 1, 0));
-            inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_RIGHT), RDID(ANALOG_Y), 1, 1));
-            for (i=0;  desc_joystick_4button[i].port == 0; i++)
-            {
-              desc[i] = desc_joystick_4button[i];
-              log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
-            }
-         }
-      }
-      if (connected[1])
-      {
-         log_cb(RETRO_LOG_INFO, "Port 1 connected\n");
-         joytype=JOY_4AXIS_2;
-         /* gravis gamepad was a hack basically needs both joytsticks to be enabled to function */
-         JOYSTICK_Enable(0, true);
-         JOYSTICK_Enable(1, true);
+        }
+        else
+        {
+                log_cb(RETRO_LOG_INFO, "Port 0 joystick\n");
+                /* analogs */
+                inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_LEFT), RDID(ANALOG_X), 0, 0));
+                inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_LEFT), RDID(ANALOG_Y), 0, 1));
+                for (i=0;  desc_joystick_2button_p1[i].port == 0; i++)
+                {
+                    desc[i] = desc_joystick_2button_p1[i];
+                    log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
+                }
+        }
 
-         /* buttons*/
-         inputList.push_back(new JoystickButton(1, RDID(JOYPAD_Y), 0, 0));
-         inputList.push_back(new JoystickButton(1, RDID(JOYPAD_B), 0, 1));
-         if (gamepad[1])
-         {
+        log_cb(RETRO_LOG_INFO, "Port 1 connected\n");
+        /* buttons*/
+        inputList.push_back(new JoystickButton(1, RDID(JOYPAD_Y), 0, 0));
+        inputList.push_back(new JoystickButton(1, RDID(JOYPAD_B), 0, 1));
+        if (gamepad[1])
+        {
             log_cb(RETRO_LOG_INFO, "Port 1 gamepad\n");
             /* dpad */
             inputList.push_back(new JoystickHat(1, RDID(JOYPAD_LEFT), 0, 0));
             inputList.push_back(new JoystickHat(1, RDID(JOYPAD_RIGHT), 0, 0));
             inputList.push_back(new JoystickHat(1, RDID(JOYPAD_UP), 0, 1));
             inputList.push_back(new JoystickHat(1, RDID(JOYPAD_DOWN), 0, 1));
-            for (i=0;  desc_gamepad_2button_p2[i].port == 1; i++)
+            for ( ;  desc_gamepad_2button_p2[j].port == 1; i++)
             {
-              desc[i] = desc_gamepad_2button_p2[i];
-              log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
+                desc[i] = desc_gamepad_2button_p2[j];
+                j++;
+                log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
             }
             log_cb(RETRO_LOG_INFO, "Map: %d\n", desc[i++].port);
-
-         }
-         else
-         {
+        }
+        else
+        {
             log_cb(RETRO_LOG_INFO, "Port 1 joystick\n");
             /* analogs */
             inputList.push_back(new JoystickAxis(1, RDIX(ANALOG_LEFT), RDID(ANALOG_X), 0, 0));
             inputList.push_back(new JoystickAxis(1, RDIX(ANALOG_LEFT), RDID(ANALOG_Y), 0, 1));
-            for (i=0;  desc_joystick_2button_p2[i].port == 1; i++)
+            for ( ;  desc_joystick_2button_p2[j].port == 1; i++)
             {
-              desc[i] = desc_joystick_2button_p2[i];
-              log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
+                desc[i] = desc_joystick_2button_p2[j];
+                j++;
+                log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
             }
-         }
-      }
+        }
+    }
+    else if (connected[0] || connected[1])
+    {
+        if (connected[0])
+        {
+            log_cb(RETRO_LOG_INFO, "Port 0 connected\n");
+            joytype=JOY_4AXIS;
+            /* gravis gamepad was a hack basically needs both joytsticks to be enabled to function */
+            JOYSTICK_Enable(0, true);
+            JOYSTICK_Enable(1, true);
+
+            /* buttons*/
+            inputList.push_back(new JoystickButton(0, RDID(JOYPAD_Y), 0, 0));
+            inputList.push_back(new JoystickButton(0, RDID(JOYPAD_X), 0, 1));
+            inputList.push_back(new JoystickButton(0, RDID(JOYPAD_B), 1, 0));
+            inputList.push_back(new JoystickButton(0, RDID(JOYPAD_A), 1, 1));
+
+            if (gamepad[0])
+            {
+                log_cb(RETRO_LOG_INFO, "Port 0 gamepad\n");
+                /* dpad */
+                inputList.push_back(new JoystickHat(0, RDID(JOYPAD_LEFT), 0, 0));
+                inputList.push_back(new JoystickHat(0, RDID(JOYPAD_RIGHT), 0, 0));
+                inputList.push_back(new JoystickHat(0, RDID(JOYPAD_UP), 0, 1));
+                inputList.push_back(new JoystickHat(0, RDID(JOYPAD_DOWN), 0, 1));
+                for (i=0;  desc_gamepad_4button[i].port == 0; i++)
+                {
+                    desc[i] = desc_gamepad_4button[i];
+                    log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
+                }
+            }
+            else
+            {
+                log_cb(RETRO_LOG_INFO, "Port 0 joystick\n");
+                /* analogs */
+                inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_LEFT), RDID(ANALOG_X), 0, 0));
+                inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_LEFT), RDID(ANALOG_Y), 0, 1));
+                inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_RIGHT), RDID(ANALOG_X), 1, 0));
+                inputList.push_back(new JoystickAxis(0, RDIX(ANALOG_RIGHT), RDID(ANALOG_Y), 1, 1));
+                for (i=0;  desc_joystick_4button[i].port == 0; i++)
+                {
+                    desc[i] = desc_joystick_4button[i];
+                    log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
+                }
+            }
+        }
+        if (connected[1])
+        {
+            log_cb(RETRO_LOG_INFO, "Port 1 connected\n");
+            joytype=JOY_4AXIS_2;
+            /* gravis gamepad was a hack basically needs both joytsticks to be enabled to function */
+            JOYSTICK_Enable(0, true);
+            JOYSTICK_Enable(1, true);
+
+            /* buttons*/
+            inputList.push_back(new JoystickButton(1, RDID(JOYPAD_Y), 0, 0));
+            inputList.push_back(new JoystickButton(1, RDID(JOYPAD_B), 0, 1));
+            if (gamepad[1])
+            {
+                log_cb(RETRO_LOG_INFO, "Port 1 gamepad\n");
+                /* dpad */
+                inputList.push_back(new JoystickHat(1, RDID(JOYPAD_LEFT), 0, 0));
+                inputList.push_back(new JoystickHat(1, RDID(JOYPAD_RIGHT), 0, 0));
+                inputList.push_back(new JoystickHat(1, RDID(JOYPAD_UP), 0, 1));
+                inputList.push_back(new JoystickHat(1, RDID(JOYPAD_DOWN), 0, 1));
+                for (i=0;  desc_gamepad_2button_p2[i].port == 1; i++)
+                {
+                    desc[i] = desc_gamepad_2button_p2[i];
+                    log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
+                }
+                log_cb(RETRO_LOG_INFO, "Map: %d\n", desc[i++].port);
+
+            }
+            else
+            {
+                log_cb(RETRO_LOG_INFO, "Port 1 joystick\n");
+                /* analogs */
+                inputList.push_back(new JoystickAxis(1, RDIX(ANALOG_LEFT), RDID(ANALOG_X), 0, 0));
+                inputList.push_back(new JoystickAxis(1, RDIX(ANALOG_LEFT), RDID(ANALOG_Y), 0, 1));
+                for (i=0;  desc_joystick_2button_p2[i].port == 1; i++)
+                {
+                    desc[i] = desc_joystick_2button_p2[i];
+                    log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
+                }
+            }
+        }
     }
 
     if (emulated_mouse)
     {
-       for (j=0;  desc_emulated_mouse[j].port == 0; i++)
-       {
-         desc[i] = desc_emulated_mouse[j];
-         j++;
-         log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
-       }
+        for (j=0;  desc_emulated_mouse[j].port == 0; i++)
+        {
+            desc[i] = desc_emulated_mouse[j];
+            j++;
+            log_cb(RETRO_LOG_INFO, "Map: %s\n", desc[i].description);
+        }
     }
     environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
 }
