@@ -61,10 +61,8 @@ cothread_t emuThread;
 Bit32u MIXER_RETRO_GetFrequency();
 void MIXER_CallBack(void * userdata, uint8_t *stream, int len);
 
-int cycles_0 = 0;
-int cycles_1 = 1;
-int cycles_2 = 0;
-int cycles_3 = 0;
+unsigned cycles;
+unsigned cycles_multiplier;
 
 extern Config * control;
 MachineType machine = MCH_VGA;
@@ -117,6 +115,22 @@ void retro_set_input_poll(retro_input_poll_t cb) { poll_cb = cb; }
 void retro_set_input_state(retro_input_state_t cb) { input_cb = cb; }
 
 /* helper functions */
+bool update_dosbox_variable(std::string section_string, std::string var_string, std::string val_string)
+{
+    bool ret = false;
+
+    Section* section = control->GetSection(section_string);
+    Section_prop *secprop = static_cast <Section_prop*>(section);
+    if (secprop)
+    {
+        section->ExecuteDestroy(false);
+        std::string inputline = var_string + "=" + val_string;
+        ret = section->HandleInputline(inputline.c_str());
+        section->ExecuteInit(false);
+    }
+    return ret;
+}
+
 void check_variables()
 {
     struct retro_variable var = {0};
@@ -174,44 +188,31 @@ void check_variables()
             emulated_mouse = false;
     }
 
-    var.key = "dosbox_cpu_cycles_0";
+    var.key = "dosbox_cpu_cycles_mode";
     var.value = NULL;
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
     {
-        cycles_0 = atoi(var.value) * 100000;
-        update_cycles = true;
+        if (strcmp(var.value, "auto") == 0)
+            update_dosbox_variable("cpu", "cycles", "auto");
+        else if (strcmp(var.value, "max") == 0)
+            update_dosbox_variable("cpu", "cycles", "max");
+        else
+            update_dosbox_variable("cpu", "cycles", std::to_string(cycles * cycles_multiplier));
     }
 
-    var.key = "dosbox_cpu_cycles_1";
+    var.key = "dosbox_cpu_cycles";
     var.value = NULL;
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-    {
-        cycles_1 = atoi(var.value) * 10000;
-        update_cycles = true;
-    }
+        cycles = atoi(var.value);
 
-    var.key = "dosbox_cpu_cycles_2";
+
+    var.key = "dosbox_cpu_cycles_multiplier";
     var.value = NULL;
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-    {
-        cycles_2 = atoi(var.value) * 1000;
-        update_cycles = true;
-    }
+        cycles_multiplier = atoi(var.value);
 
-    var.key = "dosbox_cpu_cycles_3";
-    var.value = NULL;
-    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-    {
-        cycles_3 = atoi(var.value) * 100;
-        update_cycles = true;
-    }
 
-    if(update_cycles)
-    {
-        int cycles = cycles_0 + cycles_1 + cycles_2 + cycles_3;
-        /*update_dosbox_variable("cpu", "cycles", "10");*/
-    }
-    update_cycles = false;
+
 
     /* TO-DO: Only Reinit Mapper on Mouse Core option */
     MAPPER_Init();
@@ -302,22 +303,6 @@ void init_threads(void)
     }
 }
 
-bool update_dosbox_variable(std::string section_string, std::string var_string, std::string val_string)
-{
-    bool ret = false;
-
-    Section* section = control->GetSection(section_string);
-    Section_prop* secprop=(Section_prop *)section;
-    if (secprop)
-    {
-        section->ExecuteDestroy(false);
-        std::string inputline = var_string + "=" + val_string;
-        ret = section->HandleInputline(inputline.c_str());
-        section->ExecuteInit(false);
-    }
-    return ret;
-}
-
 void restart_program(std::vector<std::string> & parameters)
 {
 
@@ -358,12 +343,11 @@ std::string normalize_path(const std::string& aPath)
 
 /* libretro core implementation */
 static struct retro_variable vars[] = {
-    { "dosbox_machine_type",   "Machine type; vgaonly|svga_s3|svga_et3000|svga_et4000|svga_paradise|hercules|cga|tandy|pcjr|ega" },
-    { "dosbox_emulated_mouse", "Gamepad emulated mouse; enable|disable" },
-    { "dosbox_cpu_cycles_0",   "CPU cycles x 100000; 0|1|2|3|4|5|6|7|8|9" },
-    { "dosbox_cpu_cycles_1",   "CPU cycles x 10000; 0|1|2|3|4|5|6|7|8|9" },
-    { "dosbox_cpu_cycles_2",   "CPU cycles x 1000; 1|2|3|4|5|6|7|8|9|0" },
-    { "dosbox_cpu_cycles_3",   "CPU cycles x 100; 0|1|2|3|4|5|6|7|8|9" },
+    { "dosbox_machine_type",          "Machine type; vgaonly|svga_s3|svga_et3000|svga_et4000|svga_paradise|hercules|cga|tandy|pcjr|ega" },
+    { "dosbox_emulated_mouse",        "Gamepad emulated mouse; enable|disable" },
+    { "dosbox_cpu_cycles_mode",       "CPU cycle mode; auto|max|fixed" },
+    { "dosbox_cpu_cycles_multiplier", "CPU cycle multiplier; 1000|10000|100000|100" },
+    { "dosbox_cpu_cycles",            "CPU cycles; 1|2|3|4|5|6|7|8|9" },
     { NULL, NULL },
 };
 
