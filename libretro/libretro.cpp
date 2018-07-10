@@ -65,7 +65,7 @@ extern Bit32s CPU_CycleMax;
 extern Bit32s CPU_CycleLimit;
 extern bool CPU_CycleAutoAdjust;
 extern bool CPU_SkipCycleAutoAdjust;
-extern struct retro_midi_interface *Midi_retro_interface;
+extern struct retro_midi_interface *retro_midi_interface;
 
 cothread_t mainThread;
 cothread_t emuThread;
@@ -452,13 +452,13 @@ void retro_init (void)
 
     static struct retro_midi_interface midi_interface;
     if(environ_cb(RETRO_ENVIRONMENT_GET_MIDI_INTERFACE, &midi_interface))
-        Midi_retro_interface = &midi_interface;
+        retro_midi_interface = &midi_interface;
     else
-        Midi_retro_interface = NULL;
+        retro_midi_interface = NULL;
 
     if (log_cb)
         log_cb(RETRO_LOG_INFO, "MIDI interface %s.\n",
-            Midi_retro_interface ? "initialized" : "unavailable\n");
+            retro_midi_interface ? "initialized" : "unavailable\n");
 
     RDOSGFXcolorMode = RETRO_PIXEL_FORMAT_XRGB8888;
     environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &RDOSGFXcolorMode);
@@ -598,8 +598,8 @@ void retro_run (void)
         if (log_cb)
             log_cb(RETRO_LOG_WARN, "Run called without emulator thread\n");
     }
-    if (Midi_retro_interface && Midi_retro_interface->output_enabled())
-        Midi_retro_interface->flush();
+    if (retro_midi_interface && retro_midi_interface->output_enabled())
+        retro_midi_interface->flush();
 }
 
 /* Stubs */
