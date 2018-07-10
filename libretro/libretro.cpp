@@ -210,7 +210,11 @@ void check_variables()
         else if (strcmp(var.value, "max") == 0)
             update_dosbox_variable("cpu", "cycles", "max");
         else
-            update_dosbox_variable("cpu", "cycles", std::to_string(cycles * cycles_multiplier));
+        {
+            char s[8];
+            snprintf(s, sizeof(s), "%d", cycles * cycles_multiplier);
+            update_dosbox_variable("cpu", "cycles", s);
+        }
     }
 
     var.key = "dosbox_cpu_cycles";
