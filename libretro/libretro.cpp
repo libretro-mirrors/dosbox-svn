@@ -109,131 +109,16 @@ unsigned currentWidth, currentHeight;
 static uint8_t audioData[829 * 4]; // 49716hz max
 static uint32_t samplesPerFrame = 735;
 
-
+/* callbacks */
 void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
 void retro_set_audio_sample(retro_audio_sample_t cb) { }
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_cb = cb; }
 void retro_set_input_poll(retro_input_poll_t cb) { poll_cb = cb; }
 void retro_set_input_state(retro_input_state_t cb) { input_cb = cb; }
 
-bool change_dosbox_var(std::string section_string, std::string var_string, std::string val_string)
-{
-    bool ret = false;
-
-    Section* section = control->GetSection(section_string);
-    Section_prop* secprop=(Section_prop *)section;
-    if (secprop)
-    {
-        section->ExecuteDestroy(false);
-        std::string inputline = var_string + "=" + val_string;
-        ret = section->HandleInputline(inputline.c_str());
-        section->ExecuteInit(false);
-    }
-    return ret;
-}
-
-static struct retro_variable vars[] = {
-    { "dosbox_machine_type",   "Machine type; vgaonly|svga_s3|svga_et3000|svga_et4000|svga_paradise|hercules|cga|tandy|pcjr|ega" },
-    { "dosbox_emulated_mouse", "Gamepad emulated mouse; enable|disable" },
-    { "dosbox_cpu_cycles_0",   "CPU cycles x 100000; 0|1|2|3|4|5|6|7|8|9" },
-    { "dosbox_cpu_cycles_1",   "CPU cycles x 10000; 0|1|2|3|4|5|6|7|8|9" },
-    { "dosbox_cpu_cycles_2",   "CPU cycles x 1000; 1|2|3|4|5|6|7|8|9|0" },
-    { "dosbox_cpu_cycles_3",   "CPU cycles x 100; 0|1|2|3|4|5|6|7|8|9" },
-    { NULL, NULL },
-};
-
-std::string normalizePath(const std::string& aPath)
-{
-    std::string result = aPath;
-    for(size_t found = result.find_first_of("\\/"); std::string::npos != found; found = result.find_first_of("\\/", found + 1))
-    {
-        result[found] = PATH_SEPARATOR;
-    }
-
-    return result;
-}
-
-void retro_set_environment(retro_environment_t cb)
-{
-    environ_cb = cb;
-
-    bool allow_no_game = true;
-    environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &allow_no_game);
-
-    cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars);
-
-    static const struct retro_controller_description ports_default[] =
-    {
-        { "Gamepad",			 RETRO_DEVICE_JOYPAD },
-        { "Joystick",			RETRO_DEVICE_JOYSTICK },
-        { "Keyboard + Mouse", RETRO_DEVICE_MAPPER },
-        { 0 },
-    };
-    static const struct retro_controller_description ports_extended[] =
-    {
-        { "Keyboard + Mouse", RETRO_DEVICE_MAPPER },
-        { 0 },
-    };
-
-    static const struct retro_controller_info ports[] = {
-        { ports_default, 3 },
-        { ports_default, 3 },
-        { ports_extended, 1 },
-        { ports_extended, 1 },
-        { ports_extended, 1 },
-        { ports_extended, 1 },
-        { 0 },
-    };
-    environ_cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)ports);
-
-    const char *system_dir = NULL;
-    if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
-        retro_system_directory=system_dir;
-    if (log_cb)
-        log_cb(RETRO_LOG_INFO, "SYSTEM_DIRECTORY: %s\n", retro_system_directory.c_str());
-
-    const char *save_dir = NULL;
-    if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) && save_dir)
-        retro_save_directory = save_dir;
-    else
-        retro_save_directory=retro_system_directory;
-    if (log_cb)
-        log_cb(RETRO_LOG_INFO, "SAVE_DIRECTORY: %s\n", retro_save_directory.c_str());
-
-    const char *content_dir = NULL;
-    if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) && content_dir)
-        retro_content_directory=content_dir;
-    if (log_cb)
-        log_cb(RETRO_LOG_INFO, "CONTENT_DIRECTORY: %s\n", retro_content_directory.c_str());
-}
-
-void retro_set_controller_port_device(unsigned port, unsigned device)
-{
-    connected[port] = false;
-    gamepad[port]	= false;
-    switch (device)
-    {
-        case RETRO_DEVICE_JOYPAD:
-            connected[port] = true;
-            gamepad[port] = true;
-            break;
-        case RETRO_DEVICE_JOYSTICK:
-            connected[port] = true;
-            gamepad[port] = false;
-            break;
-        case RETRO_DEVICE_MAPPER:
-        case RETRO_DEVICE_KEYBOARD:
-        default:
-            connected[port] = false;
-            gamepad[port] = false;
-            break;
-    }
-    MAPPER_Init();
-}
-
+/* helper functions */
 void check_variables()
 {
-
     struct retro_variable var = {0};
 
     bool update_cycles = false;
@@ -324,7 +209,7 @@ void check_variables()
     if(update_cycles)
     {
         int cycles = cycles_0 + cycles_1 + cycles_2 + cycles_3;
-        /*change_dosbox_var("cpu", "cycles", "10");*/
+        /*update_dosbox_variable("cpu", "cycles", "10");*/
     }
     update_cycles = false;
 
@@ -332,16 +217,16 @@ void check_variables()
     MAPPER_Init();
 }
 
-static void retro_leave_thread(Bitu)
+static void leave_thread(Bitu)
 {
     MIXER_CallBack(0, audioData, samplesPerFrame * 4);
     co_switch(mainThread);
 
     /* Schedule the next frontend interrupt */
-    PIC_AddEvent(retro_leave_thread, 1000.0f / 60.0f, 0);
+    PIC_AddEvent(leave_thread, 1000.0f / 60.0f, 0);
 }
 
-static void retro_start_emulator(void)
+static void start_dosbox(void)
 {
 
     const char* const argv[2] = {"dosbox", loadPath.c_str()};
@@ -365,7 +250,7 @@ static void retro_start_emulator(void)
     co_switch(mainThread);
 
     /* Schedule the next frontend interrupt */
-    PIC_AddEvent(retro_leave_thread, 1000.0f / 60.0f, 0);
+    PIC_AddEvent(leave_thread, 1000.0f / 60.0f, 0);
 
     try
     {
@@ -384,9 +269,9 @@ static void retro_start_emulator(void)
     dosbox_exit = true;
 }
 
-static void retro_wrap_emulator()
+static void wrap_dosbox()
 {
-    retro_start_emulator();
+    start_dosbox();
 
     co_switch(mainThread);
 
@@ -399,9 +284,170 @@ static void retro_wrap_emulator()
     }
 }
 
+void init_threads(void)
+{
+    if(!emuThread && !mainThread)
+    {
+        mainThread = co_active();
+#ifdef __GENODE__
+        emuThread = co_create((1<<18)*sizeof(void*), wrap_dosbox);
+#else
+        emuThread = co_create(65536*sizeof(void*)*16, wrap_dosbox);
+#endif
+    }
+    else
+    {
+        if (log_cb)
+            log_cb(RETRO_LOG_WARN, "Init called more than once \n");
+    }
+}
+
+bool update_dosbox_variable(std::string section_string, std::string var_string, std::string val_string)
+{
+    bool ret = false;
+
+    Section* section = control->GetSection(section_string);
+    Section_prop* secprop=(Section_prop *)section;
+    if (secprop)
+    {
+        section->ExecuteDestroy(false);
+        std::string inputline = var_string + "=" + val_string;
+        ret = section->HandleInputline(inputline.c_str());
+        section->ExecuteInit(false);
+    }
+    return ret;
+}
+
+void restart_program(std::vector<std::string> & parameters)
+{
+
+    if (log_cb)
+        log_cb(RETRO_LOG_WARN, "Program restart not supported\n");
+
+    return;
+
+    /* TO-DO: this kinda works but it's still not working 100% hence the early return*/
+    if(emuThread)
+    {
+        /* If the frontend wants to exit we need to let the emulator
+           run to finish its job. */
+        if(frontend_exit)
+            co_switch(emuThread);
+
+        co_delete(emuThread);
+        emuThread = NULL;
+    }
+
+    co_delete(mainThread);
+    mainThread = NULL;
+
+    is_restarting = true;
+    init_threads();
+}
+
+std::string normalize_path(const std::string& aPath)
+{
+    std::string result = aPath;
+    for(size_t found = result.find_first_of("\\/"); std::string::npos != found; found = result.find_first_of("\\/", found + 1))
+    {
+        result[found] = PATH_SEPARATOR;
+    }
+
+    return result;
+}
+
+/* libretro core implementation */
+static struct retro_variable vars[] = {
+    { "dosbox_machine_type",   "Machine type; vgaonly|svga_s3|svga_et3000|svga_et4000|svga_paradise|hercules|cga|tandy|pcjr|ega" },
+    { "dosbox_emulated_mouse", "Gamepad emulated mouse; enable|disable" },
+    { "dosbox_cpu_cycles_0",   "CPU cycles x 100000; 0|1|2|3|4|5|6|7|8|9" },
+    { "dosbox_cpu_cycles_1",   "CPU cycles x 10000; 0|1|2|3|4|5|6|7|8|9" },
+    { "dosbox_cpu_cycles_2",   "CPU cycles x 1000; 1|2|3|4|5|6|7|8|9|0" },
+    { "dosbox_cpu_cycles_3",   "CPU cycles x 100; 0|1|2|3|4|5|6|7|8|9" },
+    { NULL, NULL },
+};
+
 unsigned retro_api_version(void)
 {
     return RETRO_API_VERSION;
+}
+
+void retro_set_environment(retro_environment_t cb)
+{
+    environ_cb = cb;
+
+    bool allow_no_game = true;
+    environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &allow_no_game);
+
+    cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars);
+
+    static const struct retro_controller_description ports_default[] =
+    {
+        { "Gamepad",			 RETRO_DEVICE_JOYPAD },
+        { "Joystick",			RETRO_DEVICE_JOYSTICK },
+        { "Keyboard + Mouse", RETRO_DEVICE_MAPPER },
+        { 0 },
+    };
+    static const struct retro_controller_description ports_extended[] =
+    {
+        { "Keyboard + Mouse", RETRO_DEVICE_MAPPER },
+        { 0 },
+    };
+
+    static const struct retro_controller_info ports[] = {
+        { ports_default, 3 },
+        { ports_default, 3 },
+        { ports_extended, 1 },
+        { ports_extended, 1 },
+        { ports_extended, 1 },
+        { ports_extended, 1 },
+        { 0 },
+    };
+    environ_cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)ports);
+
+    const char *system_dir = NULL;
+    if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
+        retro_system_directory=system_dir;
+    if (log_cb)
+        log_cb(RETRO_LOG_INFO, "SYSTEM_DIRECTORY: %s\n", retro_system_directory.c_str());
+
+    const char *save_dir = NULL;
+    if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) && save_dir)
+        retro_save_directory = save_dir;
+    else
+        retro_save_directory=retro_system_directory;
+    if (log_cb)
+        log_cb(RETRO_LOG_INFO, "SAVE_DIRECTORY: %s\n", retro_save_directory.c_str());
+
+    const char *content_dir = NULL;
+    if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) && content_dir)
+        retro_content_directory=content_dir;
+    if (log_cb)
+        log_cb(RETRO_LOG_INFO, "CONTENT_DIRECTORY: %s\n", retro_content_directory.c_str());
+}
+
+void retro_set_controller_port_device(unsigned port, unsigned device)
+{
+    connected[port] = false;
+    gamepad[port]	= false;
+    switch (device)
+    {
+        case RETRO_DEVICE_JOYPAD:
+            connected[port] = true;
+            gamepad[port] = true;
+            break;
+        case RETRO_DEVICE_JOYSTICK:
+            connected[port] = true;
+            gamepad[port] = false;
+            break;
+        case RETRO_DEVICE_MAPPER:
+        case RETRO_DEVICE_KEYBOARD:
+        default:
+            connected[port] = false;
+            gamepad[port] = false;
+            break;
+    }
+    MAPPER_Init();
 }
 
 void retro_get_system_info(struct retro_system_info *info)
@@ -426,24 +472,6 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
     info->geometry.aspect_ratio = (float)4/3;
     info->timing.fps = 60.0;
     info->timing.sample_rate = (double)MIXER_RETRO_GetFrequency();
-}
-
-void retro_init_threads(void)
-{
-    if(!emuThread && !mainThread)
-    {
-        mainThread = co_active();
-#ifdef __GENODE__
-        emuThread = co_create((1<<18)*sizeof(void*), retro_wrap_emulator);
-#else
-        emuThread = co_create(65536*sizeof(void*)*16, retro_wrap_emulator);
-#endif
-    }
-    else
-    {
-        if (log_cb)
-            log_cb(RETRO_LOG_WARN, "Init called more than once \n");
-    }
 }
 
 void retro_init (void)
@@ -471,7 +499,7 @@ void retro_init (void)
     RDOSGFXcolorMode = RETRO_PIXEL_FORMAT_XRGB8888;
     environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &RDOSGFXcolorMode);
 
-    retro_init_threads();
+    init_threads();
 }
 
 void retro_deinit(void)
@@ -493,18 +521,18 @@ void retro_deinit(void)
 bool retro_load_game(const struct retro_game_info *game)
 {
 char slash;
-    #ifdef _WIN32
+#ifdef _WIN32
     slash = '\\';
-    #else
+#else
     slash = '/';
-    #endif
+#endif
 
     if(emuThread)
     {
         if(game)
         {
             /* Copy the game path */
-            loadPath = normalizePath(game->path);
+            loadPath = normalize_path(game->path);
             const size_t lastDot = loadPath.find_last_of('.');
 
             /* Find any config file to load */
@@ -520,7 +548,7 @@ char slash;
                 }
                 else if(configPath.empty())
                 {
-                    configPath = normalizePath(retro_system_directory + slash + "DOSbox" + slash + "dosbox-libretro.conf");
+                    configPath = normalize_path(retro_system_directory + slash + "DOSbox" + slash + "dosbox-libretro.conf");
                     if(log_cb)
                         log_cb(RETRO_LOG_INFO, "Loading default configuration %s\n", configPath.c_str());
                 }
@@ -597,33 +625,6 @@ void retro_run (void)
         retro_midi_interface->flush();
 }
 
-void restart_program(std::vector<std::string> & parameters)
-{
-
-    if (log_cb)
-        log_cb(RETRO_LOG_WARN, "Program restart not supported\n");
-
-    return;
-
-    /* TO-DO: this kinda works but it's still not working 100% hence the early return*/
-    if(emuThread)
-    {
-        /* If the frontend wants to exit we need to let the emulator
-           run to finish its job. */
-        if(frontend_exit)
-            co_switch(emuThread);
-
-        co_delete(emuThread);
-        emuThread = NULL;
-    }
-
-    co_delete(mainThread);
-    mainThread = NULL;
-
-    is_restarting = true;
-    retro_init_threads();
-}
-
 void retro_reset (void)
 {
     restart_program(control->startup_params);
@@ -639,5 +640,3 @@ void retro_cheat_reset(void) { }
 void retro_cheat_set(unsigned unused, bool unused1, const char* unused2) { }
 void retro_unload_game (void) { }
 unsigned retro_get_region (void) { return RETRO_REGION_NTSC; }
-
-void Mouse_AutoLock(bool enable) {}

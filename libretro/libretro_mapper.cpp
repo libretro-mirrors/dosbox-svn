@@ -73,8 +73,6 @@ static const unsigned eventKeyMap[] =
 static const unsigned eventMOD1 = 55;
 static const unsigned eventMOD2 = 53;
 
-///
-
 template<typename T>
 struct InputItem
 {
@@ -567,3 +565,5 @@ void MAPPER_Run(bool pressed)
     for (std::vector<Processable*>::iterator i = inputList.begin(); i != inputList.end(); i ++)
         (*i)->process();
 }
+
+void Mouse_AutoLock(bool enable){ return; };
