@@ -429,8 +429,8 @@ void retro_get_system_info(struct retro_system_info *info)
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
-    info->geometry.base_width = 320;//vga default width
-    info->geometry.base_height = 200;//vga default height
+    info->geometry.base_width = 320;
+    info->geometry.base_height = 200;
     info->geometry.max_width = 1024;
     info->geometry.max_height = 768;
     info->geometry.aspect_ratio = (float)4/3;
@@ -440,7 +440,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 
 void retro_init (void)
 {
-    // initialize logger interface
+    /* Initialize logger interface */
     struct retro_log_callback log;
     if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
         log_cb = log.log;
@@ -602,7 +602,7 @@ void retro_run (void)
         Midi_retro_interface->flush();
 }
 
-// Stubs
+/* Stubs */
 void *retro_get_memory_data(unsigned type) { return 0; }
 size_t retro_get_memory_size(unsigned type) { return 0; }
 void retro_reset (void) { }
