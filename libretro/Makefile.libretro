@@ -51,7 +51,7 @@ ifeq ($(platform), unix)
 	fpic = -fPIC
 else ifeq ($(platform), osx)
 	TARGET := $(TARGET_NAME)_libretro.dylib
-	LDFLAGS += -dynamiclib
+	LDFLAGS += -dynamiclib -lSDL -lsdl_net
 	fpic = -fPIC
 	ifeq ($(arch),ppc)
 		COMMONFLAGS += -DBLARGG_BIG_ENDIAN=1 -D__ppc__
