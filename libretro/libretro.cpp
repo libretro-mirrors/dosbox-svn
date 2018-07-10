@@ -368,8 +368,8 @@ static struct retro_variable vars[] = {
     { "dosbox_scaler",                "Scaler; none|normal2x|normal3x|advmame2x|advmame3x|advinterp2x|advinterp3x|hq2x|hq3x|2xsai|super2xsai|supereagle|tv2x|tv3x|rgb2x|rgb3x|scan2x|scan3x" },
     { "dosbox_emulated_mouse",        "Gamepad emulated mouse; enable|disable" },
     { "dosbox_cpu_core",              "CPU core; auto|dynamic|normal|simple" },
-    { "dosbox_cpu_type",              "CPU type; auto|dynamic|normal|simple" },
-    { "dosbox_cpu_cycles_mode",       "CPU cycle mode; auto, 386|386_slow|486|486_slow|pentium_slow|pentium|pentium_mmx|386_prefetch" },
+    { "dosbox_cpu_type",              "CPU type; auto|386|386_slow|486|486_slow|pentium_slow|pentium|pentium_mmx|386_prefetch" },
+    { "dosbox_cpu_cycles_mode",       "CPU cycle mode; auto|fixed|nax" },
     { "dosbox_cpu_cycles_multiplier", "CPU cycle multiplier; 1000|10000|100000|100" },
     { "dosbox_cpu_cycles",            "CPU cycles; 1|2|3|4|5|6|7|8|9" },
     { NULL, NULL },
@@ -652,3 +652,11 @@ void retro_cheat_reset(void) { }
 void retro_cheat_set(unsigned unused, bool unused1, const char* unused2) { }
 void retro_unload_game (void) { }
 unsigned retro_get_region (void) { return RETRO_REGION_NTSC; }
+
+bool GFX_LazyFullscreenRequested(){};
+bool GFX_TearDown(){};
+bool GFX_IsFullscreen(){};
+bool GFX_UpdateSDLCaptureState(){};
+bool GFX_RestoreMode(){};
+bool GFX_SwitchLazyFullscreen(bool){};
+bool GFX_SwitchFullscreenNoReset(){};

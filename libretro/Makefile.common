@@ -121,6 +121,11 @@ SOURCES_CXX := \
 	$(CORE_DIR)/libretro/libretro_mixer.cpp \
 	$(CORE_DIR)/libretro/nonlibc/snprintf.cpp \
 	$(CORE_DIR)/src/gui/midi.cpp \
+    $(CORE_DIR)/src/hardware/voodoo.cpp \
+    $(CORE_DIR)/src/hardware/voodoo_emu.cpp \
+    $(CORE_DIR)/src/hardware/voodoo_interface.cpp \
+    $(CORE_DIR)/src/hardware/voodoo_opengl.cpp \
+    $(CORE_DIR)/src/hardware/voodoo_vogl.cpp
 
 
 SOURCES_C := $(LIBRETRO_COMM_DIR)/libco/libco.c
