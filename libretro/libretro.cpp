@@ -55,72 +55,66 @@
 #endif
 #endif
 
-int cycles_0 = 0;
-int cycles_1 = 1;
-int cycles_2 = 0;
-int cycles_3 = 0;
-
-extern Config * control;
-extern Bit32s CPU_CycleMax;
-extern Bit32s CPU_CycleLimit;
-extern bool CPU_CycleAutoAdjust;
-extern bool CPU_SkipCycleAutoAdjust;
-extern struct retro_midi_interface *retro_midi_interface;
-
 cothread_t mainThread;
 cothread_t emuThread;
 
 Bit32u MIXER_RETRO_GetFrequency();
 void MIXER_CallBack(void * userdata, uint8_t *stream, int len);
 
-bool autofire;
-bool startup_state_capslock;
-bool startup_state_numlock;
+int cycles_0 = 0;
+int cycles_1 = 1;
+int cycles_2 = 0;
+int cycles_3 = 0;
 
+extern Config * control;
 MachineType machine = MCH_VGA;
 SVGACards svgaCard = SVGA_None;
 
+/* input variables */
 int current_port;
-
+bool autofire;
 bool gamepad[16]; /* true means gamepad, false means joystick */
 bool connected[16];
 bool emulated_mouse;
 
+/* directories */
 std::string retro_save_directory;
 std::string retro_system_directory;
 std::string retro_content_directory;
 
+/* libretro variables */
 retro_video_refresh_t video_cb;
 retro_audio_sample_batch_t audio_batch_cb;
 retro_input_poll_t poll_cb;
 retro_input_state_t input_cb;
 retro_environment_t environ_cb;
-
 retro_log_printf_t log_cb;
+extern struct retro_midi_interface *retro_midi_interface;
 
+/* DOSBox state */
 static std::string loadPath;
 static std::string configPath;
-static uint8_t audioData[829 * 4]; // 49716hz max
-static uint32_t samplesPerFrame = 735;
-static bool DOSBOXwantsExit;
-static bool FRONTENDwantsExit;
+static bool dosbox_exit;
+static bool frontend_exit;
+static bool is_restarting = false;
 
+/* video variables */
 extern Bit8u RDOSGFXbuffer[1024*768*4];
 extern Bitu RDOSGFXwidth, RDOSGFXheight, RDOSGFXpitch;
 extern unsigned RDOSGFXcolorMode;
 extern void* RDOSGFXhaveFrame;
-
 unsigned currentWidth, currentHeight;
 
-bool is_restarting = false;
+/* audio variables */
+static uint8_t audioData[829 * 4]; // 49716hz max
+static uint32_t samplesPerFrame = 735;
+
 
 void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
 void retro_set_audio_sample(retro_audio_sample_t cb) { }
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_cb = cb; }
 void retro_set_input_poll(retro_input_poll_t cb) { poll_cb = cb; }
 void retro_set_input_state(retro_input_state_t cb) { input_cb = cb; }
-
-char buf[12][PATH_MAX_LENGTH];
 
 bool change_dosbox_var(std::string section_string, std::string var_string, std::string val_string)
 {
@@ -387,7 +381,7 @@ static void retro_start_emulator(void)
     if (log_cb)
         log_cb(RETRO_LOG_WARN, "DOSBox asked to exit\n");
 
-    DOSBOXwantsExit = true;
+    dosbox_exit = true;
 }
 
 static void retro_wrap_emulator()
@@ -482,13 +476,13 @@ void retro_init (void)
 
 void retro_deinit(void)
 {
-    FRONTENDwantsExit = !DOSBOXwantsExit;
+    frontend_exit = !dosbox_exit;
 
     if(emuThread)
     {
         /* If the frontend wants to exit we need to let the emulator
            run to finish its job. */
-        if(FRONTENDwantsExit)
+        if(frontend_exit)
             co_switch(emuThread);
 
         co_delete(emuThread);
@@ -553,7 +547,7 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 void retro_run (void)
 {
     /* TO-DO: Add a core option for this */
-    if (DOSBOXwantsExit && emuThread) {
+    if (dosbox_exit && emuThread) {
         co_delete(emuThread);
         emuThread = NULL;
         environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, 0);
@@ -616,7 +610,7 @@ void restart_program(std::vector<std::string> & parameters)
     {
         /* If the frontend wants to exit we need to let the emulator
            run to finish its job. */
-        if(FRONTENDwantsExit)
+        if(frontend_exit)
             co_switch(emuThread);
 
         co_delete(emuThread);
