@@ -347,7 +347,7 @@ void MAPPER_Init()
         { 255, 255, 255, 255, "" },
     };
 
-    struct retro_input_descriptor empty = { 255, 255, 255, 255, "" };
+    struct retro_input_descriptor empty = { 0 };
 
     int i = 0;
     int j = 0;
@@ -361,6 +361,7 @@ void MAPPER_Init()
 
     if (connected[0] && connected[1])
     {
+        log_cb(RETRO_LOG_INFO, "Both ports connected, defering to two axis, two button pads\n");
         joytype=JOY_2AXIS;
         JOYSTICK_Enable(0, true);
         JOYSTICK_Enable(1, true);
@@ -432,6 +433,7 @@ void MAPPER_Init()
     }
     else if (connected[0] || connected[1])
     {
+        log_cb(RETRO_LOG_INFO, "One port connected, enabling gravis gamepad in connected port\n");
         if (connected[0])
         {
             log_cb(RETRO_LOG_INFO, "Port 0 connected\n");

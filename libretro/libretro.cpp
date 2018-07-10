@@ -37,9 +37,9 @@
 #include "control.h"
 #include "pic.h"
 #include "joystick.h"
+#include "ints/int10.h"
 
 #define RETRO_DEVICE_JOYSTICK RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 1)
-#define RETRO_DEVICE_MAPPER RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_KEYBOARD, 2)
 
 #ifndef PATH_MAX_LENGTH
 #define PATH_MAX_LENGTH 4096
@@ -151,7 +151,7 @@ void check_variables()
             machine = MCH_TANDY;
         else if (strcmp(var.value, "ega") == 0)
             machine = MCH_EGA;
-            else if (strcmp(var.value, "svga_s3") == 0)
+        else if (strcmp(var.value, "svga_s3") == 0)
         {
             machine = MCH_VGA;
             svgaCard = SVGA_S3Trio;
@@ -171,11 +171,24 @@ void check_variables()
             machine = MCH_VGA;
             svgaCard = SVGA_ParadisePVGA1A;
         }
+        else if (strcmp(var.value, "vesa_nolfb") == 0)
+        {
+            machine = MCH_VGA;
+            svgaCard = SVGA_S3Trio;
+            int10.vesa_nolfb = true;
+        }
+        else if (strcmp(var.value, "vesa_nolfb") == 0)
+        {
+            machine = MCH_VGA;
+            svgaCard = SVGA_S3Trio;
+            int10.vesa_oldvbe = true;
+        }
         else
         {
             machine = MCH_VGA;
             svgaCard = SVGA_None;
         }
+        update_dosbox_variable("dosbox", "machine", var.value);
     }
 
     var.key = "dosbox_emulated_mouse";
@@ -212,8 +225,10 @@ void check_variables()
         cycles_multiplier = atoi(var.value);
 
 
-
-
+    var.key = "dosbox_scaler";
+    var.value = NULL;
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+        update_dosbox_variable("render", "scaler", var.value);
     /* TO-DO: Only Reinit Mapper on Mouse Core option */
     MAPPER_Init();
 }
@@ -343,7 +358,8 @@ std::string normalize_path(const std::string& aPath)
 
 /* libretro core implementation */
 static struct retro_variable vars[] = {
-    { "dosbox_machine_type",          "Machine type; vgaonly|svga_s3|svga_et3000|svga_et4000|svga_paradise|hercules|cga|tandy|pcjr|ega" },
+    { "dosbox_machine_type",          "Emulated machine; svga_s3|svga_et3000|svga_et4000|svga_paradise|vesa_nolfb|vesa_oldvbe|hercules|cga|tandy|pcjr|ega|vgaonly" },
+    { "dosbox_scaler",                "Scaler; none|normal2x|normal3x|advmame2x|advmame3x|advinterp2x|advinterp3x|hq2x|hq3x|2xsai|super2xsai|supereagle|tv2x|tv3x|rgb2x|rgb3x|scan2x|scan3x" },
     { "dosbox_emulated_mouse",        "Gamepad emulated mouse; enable|disable" },
     { "dosbox_cpu_cycles_mode",       "CPU cycle mode; auto|max|fixed" },
     { "dosbox_cpu_cycles_multiplier", "CPU cycle multiplier; 1000|10000|100000|100" },
@@ -367,24 +383,26 @@ void retro_set_environment(retro_environment_t cb)
 
     static const struct retro_controller_description ports_default[] =
     {
-        { "Gamepad",			 RETRO_DEVICE_JOYPAD },
-        { "Joystick",			 RETRO_DEVICE_JOYSTICK },
-        { "Keyboard + Mouse",    RETRO_DEVICE_MAPPER },
+        { "Keyboard + Mouse",    RETRO_DEVICE_KEYBOARD },
+        { "Gamepad",             RETRO_DEVICE_JOYPAD },
+        { "Joystick",            RETRO_DEVICE_JOYSTICK },
+        { "Disconnected",        RETRO_DEVICE_NONE },
         { 0 },
     };
-    static const struct retro_controller_description ports_extended[] =
+    static const struct retro_controller_description ports_keyboard[] =
     {
-        { "Keyboard + Mouse", RETRO_DEVICE_MAPPER },
+        { "Keyboard + Mouse", RETRO_DEVICE_KEYBOARD },
+        { "Disconnected",     RETRO_DEVICE_NONE },
         { 0 },
     };
 
     static const struct retro_controller_info ports[] = {
-        { ports_default, 3 },
-        /*{ ports_default, 3 },
-        { ports_extended, 1 },
-        { ports_extended, 1 },
-        { ports_extended, 1 },
-        { ports_extended, 1 },*/
+        { ports_default,  4 },
+        { ports_default,  4 },
+        { ports_keyboard, 2 },
+        { ports_keyboard, 2 },
+        { ports_keyboard, 2 },
+        { ports_keyboard, 2 },
         { 0 },
     };
     environ_cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)ports);
@@ -427,7 +445,6 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
             connected[port] = true;
             gamepad[port] = false;
             break;
-        case RETRO_DEVICE_MAPPER:
         case RETRO_DEVICE_KEYBOARD:
         default:
             connected[port] = false;
