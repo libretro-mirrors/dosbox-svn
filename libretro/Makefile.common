@@ -131,6 +131,7 @@ SOURCES_C += $(LIBRETRO_COMM_DIR)/file/retro_dirent.c \
 endif
 
 #dynarec options
+
 ifneq (,$(filter $(platform),unix osx))
 COMMONFLAGS += -DC_HAVE_MPROTECT="1"
 endif
@@ -140,7 +141,7 @@ ifeq ($(WITH_DYNAREC), arm)
 else ifeq ($(WITH_DYNAREC), oldarm)
 	COMMONFLAGS += -DC_DYNREC="1" -DC_TARGETCPU="ARMV4LE"
 else ifeq ($(WITH_DYNAREC), x86_64)
-	ifneq ($(platform),win)
+	ifeq ($(platform),win)
 		COMMONFLAGS += -DC_DYNREC="1" -DC_TARGETCPU="X86_64"
 	endif
 else ifeq ($(WITH_DYNAREC), x86)
